@@ -1,0 +1,111 @@
+.game {
+    display: flex;
+    flex-direction: row;
+    text-align: center;
+    margin: auto;
+}
+
+.game-board {
+    position: relative;
+    margin: auto;
+    padding-top: 50px;
+}
+
+.screen {
+    text-align: center;
+    margin: auto;
+}
+
+.board {
+    width: 440px;
+    position: relative;
+    /* display: inline-block; */
+    float: left;
+}
+
+.big-square {
+    background: rgb(255, 242, 234);
+    float: left;
+    height: 40px;
+    text-align: center;
+    margin: auto;
+    width: 40px;
+}
+
+.s-wall, .s-wall-blocked {
+    background: rgb(197, 169, 154);
+    float: left;
+    height: 10px;
+    text-align: center;
+    margin: auto;
+    width: 10px;
+}
+.s-wall-blocked {
+    background: black;
+}
+
+.v-wall, .v-wall-blocked {
+    background: rgb(197, 169, 154);
+    float: left;
+    height: 40px;
+    text-align: center;
+    margin: auto;
+    width: 10px;
+}
+
+.v-wall-blocked {
+    background: black;
+}
+
+.h-wall, .h-wall-blocked {
+    background: rgb(197, 169, 154);
+    float: left;
+    height: 10px;
+    padding: 0;
+    text-align: center;
+    width: 40px;
+}
+
+.h-wall-blocked {
+    background: black;
+}
+
+.player1 {
+    border-radius: 50%;
+    display: inline-block;
+    margin-top: 7.5px;
+    height: 25px;
+    width: 25px;
+    background: #fd2121;
+}
+
+.player2 {
+    border-radius: 50%;
+    display: inline-block;
+    margin-top: 7.5px;
+    height: 25px;
+    width: 25px;
+    background: darkblue;
+}
+
+.walls-left1 {
+    border-style: solid;
+    border-width: 3px;
+    border-color: #fd2121;
+    padding: 5px;
+    float: left;
+    margin-left: 10px;
+    margin-right: 10px;
+    width: 120px;
+}
+
+.walls-left2 {
+    border-style: solid;
+    border-width: 3px;
+    border-color: darkblue;
+    padding: 5px;
+    float: left;
+    margin-left: 10px;
+    margin-right: 10px;
+    width: 120px;
+}
