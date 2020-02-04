@@ -133,30 +133,30 @@ class Board extends React.Component {
         }
     }
 
-    // if player is already there, and if there is a wall there
-    validMoves(player_coord) {
+    // TODO: if player is already there
+    validMoves(player_coord, current_squares) {
         let allValidMoves = [];
 
         if (player_coord[0]-2 >= 0) {
-            if (this.state.squares[player_coord[0]-1][player_coord[1]] === 0) {
+            if (current_squares[player_coord[0]-1][player_coord[1]] === 0) {
                 allValidMoves.push([player_coord[0]-2, player_coord[1]]);
-            } // testing this ...
+            }
         }
 
         if (player_coord[1]-2 >= 0) {
-            if (this.state.squares[player_coord[0]][player_coord[1]-1] === 0) {
+            if (current_squares[player_coord[0]][player_coord[1]-1] === 0) {
                 allValidMoves.push([player_coord[0], player_coord[1]-2]);
             }
         }
 
         if (player_coord[0]+2 <= 16) {
-            if (this.state.squares[player_coord[0]+1][player_coord[1]] === 0) {
+            if (current_squares[player_coord[0]+1][player_coord[1]] === 0) {
                 allValidMoves.push([player_coord[0]+2, player_coord[1]]);
             }
         }
 
         if (player_coord[1]+2 <= 16) {
-            if (this.state.squares[player_coord[0]][player_coord[1]+1] === 0) {
+            if (current_squares[player_coord[0]][player_coord[1]+1] === 0) {
                 allValidMoves.push([player_coord[0], player_coord[1]+2]);
             }
         }
@@ -174,7 +174,7 @@ class Board extends React.Component {
         }
     }
 
-    hasPath(player) {
+    hasPath(player, current_squares) {
         var stack = [];
         var visited = new Set();
         var target_row;
@@ -188,7 +188,7 @@ class Board extends React.Component {
         }
         while (stack.length > 0) {
             let traverse_node = stack.pop();
-            let neighbours = this.validMoves(traverse_node);
+            let neighbours = this.validMoves(traverse_node, current_squares);
 
             if (traverse_node[0] === target_row) {
                 return true;
@@ -209,84 +209,106 @@ class Board extends React.Component {
         return coord[0].toString() + "-" + coord[1].toString();
     }
 
-    onHWallClick(new_coord) {
-        // Put all criteria into one function "Valid walls"
-        console.log(this.hasPath(this.state.playerTurn) && this.hasPath(this.nextPlayer()));
+    isValidWall(coord, wall_type) {
+        let hypothetical_state = JSON.parse(JSON.stringify(this.state.squares));
+        // console.log(hypothetical_state);
+        // console.log(this.state.squares);
+        // must have walls left
+        if (!this.hasWallsLeft(this.state.playerTurn)) {
+            return false;
+        }
 
-        console.log(this.state.playerTurn);
-        if (new_coord[1] < 17 - 1 && this.hasWallsLeft(this.state.playerTurn)) {
-            let new_state = this.state.squares.slice();
-            let valid = true;
-
-
-            // checks if the wall is valid
+        if (wall_type === "h") {
+            // can't go off board
+            if (coord[1] >= 17 - 1) {
+                return false;
+            };
+            // a wall isn't already there
             for (let i = 0; i < 3; i++) {
-                if (new_state[new_coord[0]][new_coord[1]+ i] === 1) {
-                    valid = false;
-                    // check if the opponent still has a path
+                if (hypothetical_state[coord[0]][coord[1]+ i] === 1) {
+                    return false;
                 }
+            };
+            // if a wall is put there, there is still a path
+            for (let i = 0; i < 3; i++) {
+                hypothetical_state[coord[0]][coord[1]+ i] = 1;
+            };     
+
+        } else if (wall_type === "v") {
+            // can't go off board
+            if (coord[0] >= 17 - 1) {
+                return false;
+            };
+            // a wall isn't already there
+            for (let i = 0; i < 3; i++) {
+                if (hypothetical_state[coord[0]+i][coord[1]] === 1) {
+                    return false;
+                }
+            };
+            // if a wall is put there, there is still a path
+            for (let i = 0; i < 3; i++) {
+                hypothetical_state[coord[0]+i][coord[1]] = 1;
+            };
+        }
+
+        if (this.hasPath(this.state.playerTurn, hypothetical_state) && this.hasPath(this.nextPlayer(), hypothetical_state)) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
+
+    onHWallClick(new_coord) {
+        console.log(this.isValidWall(new_coord, "h"));
+        if (this.isValidWall(new_coord, "h")) {
+            let new_state = this.state.squares.slice();
+
+            for (let i = 0; i < 3; i++) {
+                new_state[new_coord[0]][new_coord[1]+ i] = 1;
+            };
+
+            if (this.state.playerTurn === 1) {
+                this.setState({playerOneWalls: this.state.playerOneWalls - 1});
+            } else {
+                this.setState({playerTwoWalls: this.state.playerTwoWalls - 1});
             }
 
-            if (valid === true) {
-                for (let i = 0; i < 3; i++) {
-                    new_state[new_coord[0]][new_coord[1]+ i] = 1;
-                };
-
-                if (this.state.playerTurn === 1) {
-                    this.setState({playerOneWalls: this.state.playerOneWalls - 1});
-                } else {
-                    this.setState({playerTwoWalls: this.state.playerTwoWalls - 1});
-                }
-
-
-                this.setState({squares: new_state, playerTurn: this.nextPlayer()})
-            }
+            this.setState({squares: new_state, playerTurn: this.nextPlayer()})
         }
     }
 
     onVWallClick(new_coord) {
-        // Put all criteria into one function "Valid walls"
-        console.log(this.hasPath(this.state.playerTurn));
-        console.log(this.state.playerTurn);
-        if (new_coord[0] < 17 - 1 && this.hasWallsLeft(this.state.playerTurn)) {
-            console.log(new_coord);
+        console.log(this.isValidWall(new_coord, "v"));
+        if (this.isValidWall(new_coord, "v")) {
             let new_state = this.state.squares.slice();
-            let valid = true;
-            
+
             for (let i = 0; i < 3; i++) {
-                if (new_state[new_coord[0]+i][new_coord[1]] === 1) {
-                    valid = false;
-                    // check if the opponent still has a path
-                }
-            }
+                new_state[new_coord[0]+i][new_coord[1]] = 1;
+            };
 
-            if (valid === true) {
-                for (let i = 0; i < 3; i++) {
-                    new_state[new_coord[0]+i][new_coord[1]] = 1;
-                };
+            if (this.state.playerTurn === 1) {
+                this.setState({playerOneWalls: this.state.playerOneWalls - 1});
+            } else {
+                this.setState({playerTwoWalls: this.state.playerTwoWalls - 1});
+            };
 
-                if (this.state.playerTurn === 1) {
-                    this.setState({playerOneWalls: this.state.playerOneWalls - 1});
-                } else {
-                    this.setState({playerTwoWalls: this.state.playerTwoWalls - 1});
-                }
+            this.setState({squares: new_state, playerTurn: this.nextPlayer()})
 
-                this.setState({squares: new_state, playerTurn: this.nextPlayer()})
-            }
         }
     }
 
     onSquareClick(new_coord) {
         let new_state = this.state.squares.slice();
-        console.log(this.validMoves(this.state.playerOneCoord));
+        // console.log(this.validMoves(this.state.playerOneCoord));
         if (this.state.playerTurn === 1) {
-            if (this.validMoves(this.state.playerOneCoord).some((x) => {return(this.isSameCoord(new_coord, x))})) {
+            if (this.validMoves(this.state.playerOneCoord,this.state.squares).some((x) => {return(this.isSameCoord(new_coord, x))})) {
                 new_state[this.state.playerOneCoord[0]][this.state.playerOneCoord[1]] = 0;
                 new_state[new_coord[0]][new_coord[1]] = this.state.playerTurn;
                 this.setState({squares: new_state, playerOneCoord: new_coord, playerTurn: this.nextPlayer()});
             }
         } else {
-            if (this.validMoves(this.state.playerTwoCoord).some((x) => {return(this.isSameCoord(new_coord, x))})) {
+            if (this.validMoves(this.state.playerTwoCoord,this.state.squares).some((x) => {return(this.isSameCoord(new_coord, x))})) {
                 new_state[this.state.playerTwoCoord[0]][this.state.playerTwoCoord[1]] = 0;
                 new_state[new_coord[0]][new_coord[1]] = this.state.playerTurn;
                 this.setState({squares: new_state, playerTwoCoord: new_coord, playerTurn: this.nextPlayer()});
